@@ -4,8 +4,6 @@ package db
 import (
     "context"
     "fmt"
-    "os"
-    "strconv"
     "time"
 
     "go.mongodb.org/mongo-driver/v2/mongo"
@@ -23,15 +21,6 @@ type MongoConfig struct {
 type MongoConnection struct {
     Client   *mongo.Client
     Database *mongo.Database
-}
-
-func NewMongoConfig() MongoConfig {
-    return MongoConfig{
-        URI:         os.Getenv("MONGO_URI"),
-        DBName:      os.Getenv("MONGO_DB_NAME"),
-        MaxPoolSize: parseUint(os.Getenv("MONGO_MAX_POOL_SIZE"), 25),
-        MinPoolSize: parseUint(os.Getenv("MONGO_MIN_POOL_SIZE"), 5),
-    }
 }
 
 func NewMongoConnection(cfg MongoConfig, sugar *zap.SugaredLogger) (*MongoConnection, error) {
@@ -65,15 +54,4 @@ func NewMongoConnection(cfg MongoConfig, sugar *zap.SugaredLogger) (*MongoConnec
         Client:   client,
         Database: client.Database(cfg.DBName),
     }, nil
-}
-
-func parseUint(val string, defaultVal uint64) uint64 {
-    if val == "" {
-        return defaultVal
-    }
-    parsed, err := strconv.ParseUint(val, 10, 64)
-    if err != nil {
-        return defaultVal
-    }
-    return parsed
 }

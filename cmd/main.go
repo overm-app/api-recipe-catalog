@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -44,6 +45,8 @@ func main() {
 	mongoCfg := db.MongoConfig{
 		URI:    os.Getenv("MONGO_URI"),
 		DBName: os.Getenv("MONGO_DB_NAME"),
+		MaxPoolSize: parseUint(os.Getenv("MONGO_MAX_POOL_SIZE"), 25),
+		MinPoolSize: parseUint(os.Getenv("MONGO_MIN_POOL_SIZE"), 5),
 	}
 
 	mongoConn, err := db.NewMongoConnection(mongoCfg, sugar)
@@ -124,4 +127,15 @@ func setupTimezone(sugar *zap.SugaredLogger) {
 		loc = time.UTC
 	}
 	time.Local = loc
+}
+
+func parseUint(val string, defaultVal uint64) uint64 {
+    if val == "" {
+        return defaultVal
+    }
+    parsed, err := strconv.ParseUint(val, 10, 64)
+    if err != nil {
+        return defaultVal
+    }
+    return parsed
 }
