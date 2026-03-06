@@ -32,9 +32,12 @@ func (r *recipeRepository) Create(ctx context.Context, recipe *models.Recipe) (*
 	return recipe, nil
 }
 
-func (r *recipeRepository) GetByID(ctx context.Context, id string) (*models.Recipe, error) {
+func (r *recipeRepository) GetByID(ctx context.Context, userID string, recipeID string) (*models.Recipe, error) {
 	var recipe models.Recipe
-	err := r.collection.FindOne(ctx, bson.D{{Key:"_id", Value: id}}).Decode(&recipe)
+	err := r.collection.FindOne(ctx, bson.D{
+		{Key:"_id", Value: recipeID},
+		{Key:"user_id", Value: userID},
+	}).Decode(&recipe)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -72,8 +75,6 @@ func (r *recipeRepository) GetByUserID(ctx context.Context, userID string, page 
 }
 
 func (r *recipeRepository) Update(ctx context.Context, recipe *models.Recipe) (*models.Recipe, error) {
-	recipe.UpdatedAt = time.Now()
-
 	filter := bson.D{{Key: "_id", Value: recipe.ID}}
 	update := bson.D{{Key: "$set", Value: recipe}}
 
@@ -84,17 +85,23 @@ func (r *recipeRepository) Update(ctx context.Context, recipe *models.Recipe) (*
 	return recipe, nil
 }
 
-func (r *recipeRepository) Archive(ctx context.Context, id string) error {
-    filter := bson.D{{Key: "_id", Value: id}}
+func (r *recipeRepository) Archive(ctx context.Context, userID string, recipeID string) error {
+    filter := bson.D{
+        {Key: "_id", Value: recipeID},
+        {Key: "user_id", Value: userID},
+    }
     update := bson.D{{Key: "$set", Value: bson.D{
         {Key: "status",     Value: models.StatusArchived},
         {Key: "updated_at", Value: time.Now()},
     }}}
 
-    _, err := r.collection.UpdateOne(ctx, filter, update)
+    result, err := r.collection.UpdateOne(ctx, filter, update)
     if err != nil {
         return fmt.Errorf("failed to archive recipe: %w", err)
     }
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("recipe not found")
+	}
 
     return nil
 }
