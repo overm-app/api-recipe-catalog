@@ -10,35 +10,24 @@ import (
 )
 
 func HandleError(c *gin.Context, sugar *zap.SugaredLogger, err error, requestID string) {
-	var appErr *appErrors.AppError
+    var appErr *appErrors.AppError
 
-	if errors.As(err, &appErr) {
-		if appErr.Err != nil {
-			sugar.Errorw("Request failed",
-				"request_id", requestID,
-				"code", appErr.Code,
-				"cause", appErr.Err.Error(),
-			)
-		} else {
-			sugar.Infow("Request rejected",
-				"request_id", requestID,
-				"code", appErr.Code,
-				"message", appErr.Message,
-			)
-		}
-		c.AbortWithStatusJSON(appErr.HTTPStatus, gin.H{
-			"code":    string(appErr.Code),
-			"message": appErr.Message,
-		})
-		return
-	}
+    if errors.As(err, &appErr) {
+        if appErr.Err != nil {
+            c.Set("error_cause", appErr.Err.Error())
+            c.Set("error_code", string(appErr.Code))
+        }
+        c.AbortWithStatusJSON(appErr.HTTPStatus, gin.H{
+            "code":    string(appErr.Code),
+            "message": appErr.Message,
+        })
+        return
+    }
 
-	sugar.Errorw("Unexpected error",
-		"request_id", requestID,
-		"error", err.Error(),
-	)
-	c.AbortWithStatusJSON(500, gin.H{
-		"code":    string(appErrors.ErrInternal),
-		"message": "An unexpected error occurred",
-	})
+    c.Set("error_cause", err.Error())
+    c.Set("error_code", string(appErrors.ErrInternal))
+    c.AbortWithStatusJSON(500, gin.H{
+        "code":    string(appErrors.ErrInternal),
+        "message": "An unexpected error occurred",
+    })
 }

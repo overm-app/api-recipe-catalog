@@ -71,35 +71,33 @@ func (r *Router) setupRoutes(ginEngine *gin.Engine) {
 }
 
 func ginZapLogger(sugar *zap.SugaredLogger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		start := time.Now()
-		path := c.Request.URL.Path
-		clientType := c.GetHeader("X-Client-Type")
+    return func(c *gin.Context) {
+        start := time.Now()
+        path := c.Request.URL.Path
+        clientType := c.GetHeader("X-Client-Type")
+        c.Next()
 
-		c.Next()
+        fields := []any{
+            "request_id",  c.GetString("request_id"),
+            "status",      c.Writer.Status(),
+            "method",      c.Request.Method,
+            "client_type", clientType,
+            "path",        path,
+            "latency_ms",  time.Since(start).Milliseconds(),
+            "ip",          c.ClientIP(),
+        }
+		
+        if cause := c.GetString("error_cause"); cause != "" {
+            fields = append(fields, "error_cause", cause)
+            fields = append(fields, "error_code", c.GetString("error_code"))
+        }
 
-		fields := []any{
-			"request_id", c.GetString("request_id"),
-			"status", c.Writer.Status(),
-			"method", c.Request.Method,
-			"client_type", clientType,
-			"path", path,
-			"latency_ms", time.Since(start).Milliseconds(),
-			"ip", c.ClientIP(),
-		}
-
-		if errs := c.Errors.ByType(gin.ErrorTypePrivate).String(); errs != "" {
-			fields = append(fields, "error", errs)
-			sugar.Errorw("HTTP request with error", fields...)
-			return
-		}
-
-		if c.Writer.Status() >= 500 && c.Writer.Status() < 600 {
-			sugar.Errorw("HTTP request", fields...)
-		} else {
-			sugar.Infow("HTTP request", fields...)
-		}
-	}
+        if c.Writer.Status() >= 500 {
+            sugar.Errorw("HTTP request", fields...)
+        } else {
+            sugar.Infow("HTTP request", fields...)
+        }
+    }
 }
 
 func requestIDMiddleware() gin.HandlerFunc {
