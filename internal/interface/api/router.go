@@ -67,6 +67,10 @@ func (r *Router) setupRoutes(ginEngine *gin.Engine) {
 			})
 		})
 		recipes.POST("/recipes", r.recipeHandler.Create)
+		recipes.GET("/recipes", r.recipeHandler.List)
+		recipes.GET("/recipes/:id", r.recipeHandler.GetByID)
+		recipes.PATCH("/recipes/:id", r.recipeHandler.Update)
+		recipes.DELETE("/recipes/:id", r.recipeHandler.Archive)
 	}
 }
 
@@ -86,7 +90,7 @@ func ginZapLogger(sugar *zap.SugaredLogger) gin.HandlerFunc {
             "latency_ms",  time.Since(start).Milliseconds(),
             "ip",          c.ClientIP(),
         }
-		
+
         if cause := c.GetString("error_cause"); cause != "" {
             fields = append(fields, "error_cause", cause)
             fields = append(fields, "error_code", c.GetString("error_code"))
