@@ -34,7 +34,7 @@ func (r *recipeRepository) Create(ctx context.Context, recipe *models.Recipe) (*
 
 func (r *recipeRepository) GetByID(ctx context.Context, id string) (*models.Recipe, error) {
 	var recipe models.Recipe
-	err := r.collection.FindOne(ctx, bson.D{{"_id", id}}).Decode(&recipe)
+	err := r.collection.FindOne(ctx, bson.D{{Key:"_id", Value: id}}).Decode(&recipe)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
