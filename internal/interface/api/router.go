@@ -94,7 +94,11 @@ func ginZapLogger(sugar *zap.SugaredLogger) gin.HandlerFunc {
 			return
 		}
 
-		sugar.Infow("HTTP request", fields...)
+		if c.Writer.Status() >= 500 && c.Writer.Status() < 600 {
+			sugar.Errorw("HTTP request", fields...)
+		} else {
+			sugar.Infow("HTTP request", fields...)
+		}
 	}
 }
 
