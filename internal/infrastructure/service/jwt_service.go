@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 
@@ -12,13 +11,11 @@ import (
 
 type JWTService struct {
 	secret     []byte
-	expiration time.Duration
 }
 
-func NewJWTService(secret []byte, expiration time.Duration) ports.JWTService {
+func NewJWTService(secret []byte) ports.JWTService {
 	return &JWTService{
 		secret:     secret,
-		expiration: expiration,
 	}
 }
 

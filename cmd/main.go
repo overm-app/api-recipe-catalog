@@ -11,6 +11,11 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/overm-app/api-recipe-catalog/internal/infrastructure/db"
+	"github.com/overm-app/api-recipe-catalog/internal/infrastructure/repository"
+	"github.com/overm-app/api-recipe-catalog/internal/infrastructure/service"
+	"github.com/overm-app/api-recipe-catalog/internal/interface/api"
+	"github.com/overm-app/api-recipe-catalog/internal/interface/api/handlers"
+	"github.com/overm-app/api-recipe-catalog/internal/usecase"
 )
 
 func main() {
@@ -25,23 +30,13 @@ func main() {
 
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
-		port = "8081"
-		sugar.Warnw("SERVER_PORT not set, defaulting to 8081")
+		port = "8082"
+		sugar.Warnw("SERVER_PORT not set, defaulting to 8082")
 	}
-
-	// jwtExpiration := 24 * time.Hour
-	// if exp := os.Getenv("JWT_EXPIRATION_HOURS"); exp != "" {
-	// 	if parsed, err := time.ParseDuration(exp + "h"); err == nil {
-	// 		jwtExpiration = parsed
-	// 	} else {
-	// 		sugar.Warnw("Invalid JWT_EXPIRATION_HOURS, defaulting to 24h", "value", exp)
-	// 	}
-	// }
 
 	// Set server timezone
 	setupTimezone(sugar)
 
-	// Connect to databasepackage cmd
 	mongoCfg := db.MongoConfig{
 		URI:    os.Getenv("MONGO_URI"),
 		DBName: os.Getenv("MONGO_DB_NAME"),
@@ -57,6 +52,7 @@ func main() {
 	defer mongoConn.Client.Disconnect(context.Background())
 
 	// Initialize repositories
+	recipeRepo := repository.NewRecipeRepository(mongoConn)
 
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 	if len(jwtSecret) == 0 {
@@ -65,24 +61,27 @@ func main() {
 	}
 
 	// Initialize services
+	jwtService := service.NewJWTService(jwtSecret)
 
 	// Initialize use cases
+	recipeUseCase := usecase.NewRecipeUseCase(recipeRepo)
 
 	// Initialize API handlers
+	recipeHandler := handlers.NewRecipeHandler(recipeUseCase, jwtService, sugar)
 
 	// Setup and start server
-	// r := api.NewRouter(authHandler, userHandler, jwtService, sugar)
-	// engine := r.SetupRouter(sugar)
+	r := api.NewRouter(recipeHandler, jwtService, sugar)
+	engine := r.SetupRouter(sugar)
 
 	sugar.Infow("Starting server", "port", port)
 
-	// if err := engine.Run(":" + port); err != nil {
-	// 	sugar.Errorw("Failed to start server",
-	// 		"error", err,
-	// 		"port", port,
-	// 	)
-	// 	os.Exit(1)
-	// }
+	if err := engine.Run(":" + port); err != nil {
+		sugar.Errorw("Failed to start server",
+			"error", err,
+			"port", port,
+		)
+		os.Exit(1)
+	}
 }
 
 func setupLogger() *zap.SugaredLogger {
