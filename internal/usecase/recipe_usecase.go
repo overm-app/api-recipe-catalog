@@ -54,7 +54,7 @@ func (uc *RecipeUseCase) Create(ctx context.Context, userID string, req *models.
 	return recipe, nil
 }
 
-func (uc *RecipeUseCase) ListOne(ctx context.Context, userID, recipeID string) (*models.Recipe, error) {
+func (uc *RecipeUseCase) GetByID(ctx context.Context, userID, recipeID string) (*models.Recipe, error) {
 	recipe, err := uc.recipeRepo.GetByID(ctx, userID, recipeID)
 	if err != nil {
 		return nil, appErrors.Internal("Failed to retrieve recipe", err)

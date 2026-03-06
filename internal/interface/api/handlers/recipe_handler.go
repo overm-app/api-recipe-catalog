@@ -47,3 +47,61 @@ func (h *RecipeHandler) Create(c *gin.Context) {
 
 	c.JSON(201, resp)
 }
+
+func (h *RecipeHandler) GetByID(c *gin.Context) {
+    requestID := c.GetString("request_id")
+    userID := c.GetString("user_id")
+    recipeID := c.Param("id")
+
+    resp, err := h.recipeUseCase.GetByID(c.Request.Context(), userID, recipeID)
+    if err != nil {
+        response.HandleError(c, h.sugar, err, requestID)
+        return
+    }
+    c.JSON(200, resp)
+}
+
+func (h *RecipeHandler) List(c *gin.Context) {
+    requestID := c.GetString("request_id")
+    userID := c.GetString("user_id")
+
+    page, pageSize := response.GetPaginationParams(c)
+
+    resp, err := h.recipeUseCase.List(c.Request.Context(), userID, page, pageSize)
+    if err != nil {
+        response.HandleError(c, h.sugar, err, requestID)
+        return
+    }
+    c.JSON(200, resp)
+}
+
+func (h *RecipeHandler) Update(c *gin.Context) {
+    requestID := c.GetString("request_id")
+    userID := c.GetString("user_id")
+    recipeID := c.Param("id")
+
+    var req models.UpdateRecipeRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        response.HandleError(c, h.sugar, appErrors.Validation(appErrors.ErrValidation, err.Error()), requestID)
+        return
+    }
+
+    resp, err := h.recipeUseCase.Update(c.Request.Context(), userID, recipeID, &req)
+    if err != nil {
+        response.HandleError(c, h.sugar, err, requestID)
+        return
+    }
+    c.JSON(200, resp)
+}
+
+func (h *RecipeHandler) Archive(c *gin.Context) {
+    requestID := c.GetString("request_id")
+    userID := c.GetString("user_id")
+    recipeID := c.Param("id")
+
+    if err := h.recipeUseCase.Archive(c.Request.Context(), userID, recipeID); err != nil {
+        response.HandleError(c, h.sugar, err, requestID)
+        return
+    }
+    c.Status(204)
+}
