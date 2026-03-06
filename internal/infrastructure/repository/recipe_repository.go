@@ -98,3 +98,21 @@ func (r *recipeRepository) Archive(ctx context.Context, id string) error {
 
     return nil
 }
+
+func (r *recipeRepository) FindByTitle(ctx context.Context, userID string, title string) (*models.Recipe, error) {
+	filter := bson.D{
+		{Key: "user_id", Value: userID},
+		{Key: "title", Value: title},
+		{Key: "status", Value: models.StatusActive},
+	}
+
+	var recipe models.Recipe
+	err := r.collection.FindOne(ctx, filter).Decode(&recipe)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to find recipe by title: %w", err)
+	}
+	return &recipe, nil
+}

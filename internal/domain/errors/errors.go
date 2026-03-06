@@ -23,11 +23,11 @@ func Validation(code ErrorCode, message string) *AppError {
 	}
 }
 
-func RecipeForbidden(code ErrorCode, message string) *AppError {
+func Forbidden(code ErrorCode, message string) *AppError {
 	return &AppError{
 		Code: code,
 		Message: message,
-		HTTPStatus: 404,
+		HTTPStatus: 403,
 	}
 }
 
