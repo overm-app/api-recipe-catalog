@@ -78,12 +78,15 @@ func (uc *RecipeUseCase) List(ctx context.Context, userID string, page int, page
         return nil, appErrors.Internal("Failed to retrieve recipes", err)
     }
 
+    totalPages := (total + pageSize - 1) / pageSize
+
     return &models.RecipeListResponse{
         Data: recipes,
         Meta: models.Meta{
             Total:    total,
             Page:     page,
             PageSize: pageSize,
+            TotalPages: totalPages,
         },
     }, nil
 }
