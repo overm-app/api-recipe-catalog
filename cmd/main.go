@@ -109,7 +109,7 @@ func setupLogger() *zap.SugaredLogger {
 		ErrorOutputPaths: []string{"stderr"},
 	}.Build()
 
-	logger = logger.WithOptions(zap.WithCaller(true), zap.AddStacktrace(zapcore.FatalLevel))
+	logger = logger.WithOptions(zap.WithCaller(false), zap.AddStacktrace(zapcore.FatalLevel))
 	sugar := logger.Sugar()
 	return sugar
 }
