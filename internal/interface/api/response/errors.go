@@ -16,7 +16,6 @@ func HandleError(c *gin.Context, sugar *zap.SugaredLogger, err error, requestID 
         if appErr.Err != nil {
             c.Set("error_cause", appErr.Err.Error())
             c.Set("error_code", string(appErr.Code))
-            println("it will put a error cause in log")
         }
         c.AbortWithStatusJSON(appErr.HTTPStatus, gin.H{
             "code":    string(appErr.Code),
