@@ -1,4 +1,4 @@
-const db = db.getSiblingDB("overm_recipes");
+db = db.getSiblingDB("overm_recipes");
 
 db.createCollection("recipes", {
   validator: {
@@ -11,7 +11,7 @@ db.createCollection("recipes", {
         "source", "created_at"
       ],
       properties: {
-        "_id": { bsonType: "objectId" },
+        "_id": { bsonType: "string" },
         "user_id": { bsonType: "string" },
         "title": { bsonType: "string" },
         "description": { bsonType: "string" },

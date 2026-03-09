@@ -49,12 +49,12 @@ func (r *recipeRepository) GetByID(ctx context.Context, userID string, recipeID 
 }
 
 func (r *recipeRepository) GetByUserID(ctx context.Context, userID string, page int, pageSize int) ([]models.Recipe, int, error) {
-	filer := bson.D{
+	filter := bson.D{
 		{Key: "user_id", Value: userID},
 		{Key: "status", Value: models.StatusActive},
 	}
 
-	total, err := r.collection.CountDocuments(ctx, filer)
+	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count recipes: %w", err)
 	}
@@ -62,7 +62,7 @@ func (r *recipeRepository) GetByUserID(ctx context.Context, userID string, page 
 	skip := int64((page - 1) * pageSize)
 	opts := options.Find().SetSkip(skip).SetLimit(int64(pageSize)).SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	cursor, err := r.collection.Find(ctx, filer, opts)
+	cursor, err := r.collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find recipes: %w", err)
 	}
@@ -77,9 +77,22 @@ func (r *recipeRepository) GetByUserID(ctx context.Context, userID string, page 
 
 func (r *recipeRepository) Update(ctx context.Context, recipe *models.Recipe) (*models.Recipe, error) {
 	filter := bson.D{{Key: "_id", Value: recipe.ID}, {Key: "status", Value: models.StatusActive}}
-	update := bson.D{{Key: "$set", Value: recipe}}
 
-	_, err := r.collection.UpdateOne(ctx, filter, update)
+	data, err := bson.Marshal(recipe)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal recipe for update: %w", err)
+	}
+
+	updateData := bson.M{}
+	if err := bson.Unmarshal(data, &updateData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal recipe for update: %w", err)
+	}
+
+	delete(updateData, "_id")
+	delete(updateData, "user_id")
+
+	update := bson.D{{Key: "$set", Value: updateData}}
+	_, err = r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update recipe: %w", err)
 	}
