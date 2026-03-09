@@ -37,6 +37,7 @@ func (r *recipeRepository) GetByID(ctx context.Context, userID string, recipeID 
 	err := r.collection.FindOne(ctx, bson.D{
 		{Key:"_id", Value: recipeID},
 		{Key:"user_id", Value: userID},
+		{Key:"status", Value: models.StatusActive},
 	}).Decode(&recipe)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -75,7 +76,7 @@ func (r *recipeRepository) GetByUserID(ctx context.Context, userID string, page 
 }
 
 func (r *recipeRepository) Update(ctx context.Context, recipe *models.Recipe) (*models.Recipe, error) {
-	filter := bson.D{{Key: "_id", Value: recipe.ID}}
+	filter := bson.D{{Key: "_id", Value: recipe.ID}, {Key: "status", Value: models.StatusActive}}
 	update := bson.D{{Key: "$set", Value: recipe}}
 
 	_, err := r.collection.UpdateOne(ctx, filter, update)
@@ -89,6 +90,7 @@ func (r *recipeRepository) Archive(ctx context.Context, userID string, recipeID 
     filter := bson.D{
         {Key: "_id", Value: recipeID},
         {Key: "user_id", Value: userID},
+		{Key: "status", Value: models.StatusActive},
     }
     update := bson.D{{Key: "$set", Value: bson.D{
         {Key: "status",     Value: models.StatusArchived},

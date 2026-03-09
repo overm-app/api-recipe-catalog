@@ -5,19 +5,19 @@ import (
 )
 
 type Recipe struct {
-	ID               string       `json:"id"`
-	UserID           string       `json:"-"`
-	Title            string       `json:"title"`
-	Description      string       `json:"description"`
-	Ingredients      []Ingredient `json:"ingredients"`
-	Steps            []string     `json:"steps"`
-	Servings         int         `json:"servings"`
-	Tags             []string     `json:"tags"`
-	MacrosPerServing Macro        `json:"macros_per_serving"`
-	Status           string       `json:"status"`
-	Source           string       `json:"source"`
-	CreatedAt       time.Time    `json:"created_at"`
-	UpdatedAt       time.Time    `json:"updated_at"`
+    ID               string       `json:"id"                bson:"_id"`
+    UserID           string       `json:"-"                 bson:"user_id"`
+    Title            string       `json:"title"             bson:"title"`
+    Description      string       `json:"description"       bson:"description"`
+    Ingredients      []Ingredient `json:"ingredients"       bson:"ingredients"`
+    Steps            []string     `json:"steps"             bson:"steps"`
+    Servings         int          `json:"servings"          bson:"servings"`
+    Tags             []string     `json:"tags"              bson:"tags"`
+    MacrosPerServing Macro        `json:"macros_per_serving" bson:"macros_per_serving"`
+    Status           string       `json:"status"            bson:"status"`
+    Source           string       `json:"source"            bson:"source"`
+    CreatedAt        time.Time    `json:"created_at"        bson:"created_at"`
+    UpdatedAt        time.Time    `json:"updated_at"        bson:"updated_at"`
 }
 
 type RecipeListResponse struct {

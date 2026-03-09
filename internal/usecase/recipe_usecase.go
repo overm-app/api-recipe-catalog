@@ -88,8 +88,8 @@ func (uc *RecipeUseCase) List(ctx context.Context, userID string, page int, page
     }, nil
 }
 
-func (uc *RecipeUseCase) Update(ctx context.Context, userID string, id string, req *models.UpdateRecipeRequest) (*models.Recipe, error) {
-    recipe, err := uc.recipeRepo.GetByID(ctx, id, userID)
+func (uc *RecipeUseCase) Update(ctx context.Context, userID string, recipeid string, req *models.UpdateRecipeRequest) (*models.Recipe, error) {
+    recipe, err := uc.recipeRepo.GetByID(ctx, userID, recipeid)
     if err != nil {
         return nil, appErrors.Internal("Failed to retrieve recipe", err)
     }
@@ -136,8 +136,8 @@ func (uc *RecipeUseCase) Update(ctx context.Context, userID string, id string, r
     return updated, nil
 }
 
-func (uc *RecipeUseCase) Archive(ctx context.Context, userID string, id string) error {
-    err := uc.recipeRepo.Archive(ctx, id, userID)
+func (uc *RecipeUseCase) Archive(ctx context.Context, userID string, recipeid string) error {
+    err := uc.recipeRepo.Archive(ctx, userID, recipeid)
     if err != nil {
         if err.Error() == "recipe not found" {
             return appErrors.NotFound(appErrors.ErrNotFound, "Recipe not found")

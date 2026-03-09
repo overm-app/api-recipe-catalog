@@ -85,10 +85,10 @@ func ginZapLogger(sugar *zap.SugaredLogger) gin.HandlerFunc {
             "request_id",  c.GetString("request_id"),
             "status",      c.Writer.Status(),
             "method",      c.Request.Method,
-            "client_type", clientType,
             "path",        path,
             "latency_ms",  time.Since(start).Milliseconds(),
             "ip",          c.ClientIP(),
+			"client_type", clientType,
         }
 
         if cause := c.GetString("error_cause"); cause != "" {

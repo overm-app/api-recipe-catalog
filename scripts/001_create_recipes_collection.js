@@ -1,11 +1,13 @@
+const db = db.getSiblingDB("overm_recipes");
+
 db.createCollection("recipes", {
   validator: {
     $jsonSchema: {
       bsonType: "object",
       title: "Recipe",
       required: [
-        "user_id", "title", "description", 
-        "steps", "servings", "status", 
+        "user_id", "title", "description",
+        "steps", "servings", "status",
         "source", "created_at"
       ],
       properties: {
@@ -29,7 +31,7 @@ db.createCollection("recipes", {
           bsonType: "array",
           items: { bsonType: "string" }
         },
-        "servings": { bsonType: "int" },
+        "servings":  { bsonType: "int" },
         "tags": {
           bsonType: "array",
           items: { bsonType: "string" }
@@ -53,8 +55,5 @@ db.createCollection("recipes", {
   }
 });
 
-// index for fast lookup by user
 db.recipes.createIndex({ "user_id": 1 });
-
-// index for status filter
 db.recipes.createIndex({ "user_id": 1, "status": 1 });
