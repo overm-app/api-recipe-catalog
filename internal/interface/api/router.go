@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -8,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	appErrors "github.com/overm-app/api-recipe-catalog/internal/domain/errors"
 	"github.com/overm-app/api-recipe-catalog/internal/domain/ports"
 	"github.com/overm-app/api-recipe-catalog/internal/interface/api/handlers"
 	"github.com/overm-app/api-recipe-catalog/internal/interface/api/middleware"
@@ -75,33 +77,50 @@ func (r *Router) setupRoutes(ginEngine *gin.Engine) {
 }
 
 func ginZapLogger(sugar *zap.SugaredLogger) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        start := time.Now()
-        path := c.Request.URL.Path
-        clientType := c.GetHeader("X-Client-Type")
-        c.Next()
+	return func(c *gin.Context) {
+		switch c.Request.URL.Path {
+		case "/health/livez", "/health/readyz":
+			c.Next()
+			return
+		}
+		start := time.Now()
+		path := c.Request.URL.Path
+		clientType := c.GetHeader("X-Client-Type")
 
-        fields := []any{
-            "request_id",  c.GetString("request_id"),
-            "status",      c.Writer.Status(),
-            "method",      c.Request.Method,
-            "path",        path,
-            "latency_ms",  time.Since(start).Milliseconds(),
-            "ip",          c.ClientIP(),
+		c.Next()
+
+		status := c.Writer.Status()
+		fields := []any{
+			"request_id", c.GetString("request_id"),
+			"status", status,
+			"method", c.Request.Method,
 			"client_type", clientType,
-        }
+			"path", path,
+			"latency_ms", time.Since(start).Milliseconds(),
+			"ip", c.ClientIP(),
+		}
 
-        if cause := c.GetString("error_cause"); cause != "" {
-            fields = append(fields, "error_cause", cause)
-            fields = append(fields, "error_code", c.GetString("error_code"))
-        }
+		if len(c.Errors) > 0 {
+			err := c.Errors.Last().Err
+			if appErr, ok := errors.AsType[*appErrors.AppError](err); ok {
+				fields = append(fields, "code", appErr.Code)
+				if appErr.Err != nil {
+					fields = append(fields, "cause", appErr.Err.Error())
+				}
+			} else {
+				fields = append(fields, "error", err.Error())
+			}
+		}
 
-        if c.Writer.Status() >= 500 {
-            sugar.Errorw("HTTP request", fields...)
-        } else {
-            sugar.Infow("HTTP request", fields...)
-        }
-    }
+		switch {
+		case status >= 500:
+			sugar.Errorw("HTTP request", fields...)
+		case status >= 400:
+			sugar.Infow("HTTP request", fields...)
+		default:
+			sugar.Infow("HTTP request", fields...)
+		}
+	}
 }
 
 func requestIDMiddleware() gin.HandlerFunc {

@@ -17,7 +17,6 @@ func NewJWTMiddleware() *JWTMiddleware {
 
 func (m *JWTMiddleware) JWTAuthMiddleware(jwtService ports.JWTService, sugar *zap.SugaredLogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		requestID := c.GetString("request_id")
 		var tokenString string
 
 		clientType := c.GetHeader("X-Client-Type")
@@ -25,14 +24,14 @@ func (m *JWTMiddleware) JWTAuthMiddleware(jwtService ports.JWTService, sugar *za
 		if clientType == "web" {
 			cookie, err := c.Cookie("overm_access_token")
 			if err != nil {
-				response.HandleError(c, sugar, appErrors.Unauthorized(appErrors.ErrUnauthorized, "Missing session cookie"), requestID)
+				response.HandleError(c, appErrors.Unauthorized(appErrors.ErrUnauthorized, "Missing session cookie"))
 				return
 			}
 			tokenString = cookie
 		} else {
 			bearer := c.GetHeader("Authorization")
 			if len(bearer) < 8 || bearer[:7] != "Bearer " {
-				response.HandleError(c, sugar, appErrors.Unauthorized(appErrors.ErrUnauthorized, "Missing or malformed Authorization header"), requestID)
+				response.HandleError(c, appErrors.Unauthorized(appErrors.ErrUnauthorized, "Missing or malformed Authorization header"))
 				return
 			}
 			tokenString = bearer[7:]
@@ -40,7 +39,7 @@ func (m *JWTMiddleware) JWTAuthMiddleware(jwtService ports.JWTService, sugar *za
 
 		claims, err := jwtService.ValidateToken(tokenString)
 		if err != nil {
-			response.HandleError(c, sugar, err, requestID)
+			response.HandleError(c, err)
 			return
 		}
 

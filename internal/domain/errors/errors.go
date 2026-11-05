@@ -64,3 +64,12 @@ func Internal(message string, err error) *AppError {
 		HTTPStatus: 500,
 	}
 }
+
+func ServiceUnavailable(message string, err error) *AppError {
+	return &AppError{
+		Code: ErrUnavailable,
+		Message: message,
+		Err: err,
+		HTTPStatus: 503,
+	}
+}
