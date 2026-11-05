@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
@@ -23,9 +22,11 @@ func main() {
 	sugar := setupLogger()
 	defer sugar.Sync()
 
-	// Load environment variables
-	if err := godotenv.Load(); err != nil {
-		sugar.Warnw("No .env file found, using environment variables or defaults")
+	currentEnv := os.Getenv("ENV")
+	if currentEnv != "develop" && currentEnv != "QA" && currentEnv != "prod" {
+		if err := godotenv.Load(); err != nil {
+			sugar.Errorw("No .env file found, relying on system environment variables")
+		}
 	}
 
 	port := os.Getenv("SERVER_PORT")
@@ -33,9 +34,6 @@ func main() {
 		port = "8082"
 		sugar.Warnw("SERVER_PORT not set, defaulting to 8082")
 	}
-
-	// Set server timezone
-	setupTimezone(sugar)
 
 	mongoCfg := db.MongoConfig{
 		URI:    os.Getenv("MONGO_URI"),
@@ -112,20 +110,6 @@ func setupLogger() *zap.SugaredLogger {
 	logger = logger.WithOptions(zap.WithCaller(false), zap.AddStacktrace(zapcore.FatalLevel))
 	sugar := logger.Sugar()
 	return sugar
-}
-
-func setupTimezone(sugar *zap.SugaredLogger) {
-	timezone := os.Getenv("SERVER_TIMEZONE")
-	if timezone == "" {
-		timezone = "UTC"
-	}
-	loc, err := time.LoadLocation(timezone)
-	sugar.Infow("Setting server timezone", "timezone", timezone)
-	if err != nil {
-		sugar.Errorw("Failed to set timezone", "timezone", timezone, "error", err)
-		loc = time.UTC
-	}
-	time.Local = loc
 }
 
 func parseUint(val string, defaultVal uint64) uint64 {
