@@ -15,6 +15,23 @@ services:
     networks:
       - overm-network
 
+  api-recipe-catalog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-recipe-catalog
+    depends_on:
+      - mongo
+    env_file:
+      - .env_compose
+    environment:
+      ENV: "develop"
+    networks:
+      - overm-network
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    restart: unless-stopped
+
 volumes:
   mongo-data:
 
