@@ -1,4 +1,3 @@
-// db/mongo.go
 package db
 
 import (
@@ -37,6 +36,7 @@ func NewMongoConnection(cfg MongoConfig, sugar *zap.SugaredLogger) (*MongoConnec
 
     client, err := mongo.Connect(opts)
     if err != nil {
+        client.Disconnect(ctx)
         return nil, fmt.Errorf("failed to create MongoDB client: %w", err)
     }
 

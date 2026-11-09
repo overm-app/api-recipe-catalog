@@ -36,13 +36,13 @@ Closes #
 
 ## Checklist
 - [ ] Follows clean architecture — no layer imports above itself
-- [ ] No raw SQL — squirrel used for all queries
+- [ ] No raw SQL in all the querys
 - [ ] All errors use typed codes from `domain/errors/codes.go`
 - [ ] No `fmt.Errorf` used where `appErrors` should be used
 - [ ] `context.Context` threaded through all repository and usecase calls
 - [ ] No env vars read outside `main.go` or config constructors
 - [ ] No secrets or `.env` files committed
-- [ ] `GET /healthz` returns `{"status":"ok","service":"<name>"}`
+- [ ] `GET /health/readyz and GET /health/livez` returns `{"status":"healthy","service":"<name>"}`
 - [ ] `GET /metrics` endpoint present (Phase 4 — skip until observability sprint)
 
 ---

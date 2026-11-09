@@ -2,8 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
@@ -66,26 +71,59 @@ func main() {
 
 	// Initialize API handlers
 	recipeHandler := handlers.NewRecipeHandler(recipeUseCase, jwtService, sugar)
+	healthHandler := handlers.NewHealthHandler(mongoConn, sugar)
 
 	// Setup and start server
-	r := api.NewRouter(recipeHandler, jwtService, sugar)
+	r := api.NewRouter(recipeHandler, healthHandler, jwtService, sugar)
 	engine := r.SetupRouter(sugar)
 
-	sugar.Infow("Starting server", "port", port)
-
-	if err := engine.Run(":" + port); err != nil {
-		sugar.Errorw("Failed to start server",
-			"error", err,
-			"port", port,
-		)
-		os.Exit(1)
+	srv := &http.Server{
+		Addr: ":" + port,
+		Handler: engine,
+		ReadHeaderTimeout: 5 * time.Second,
 	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+	defer stop()
+
+	serverErr := make(chan error, 1)
+	go func() {
+		sugar.Infow("Starting server", "port", port)
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+		}
+	}()
+
+	select {
+	case err := <-serverErr:
+		sugar.Errorw("Server failed", "error", err)
+		os.Exit(1)
+	case <-ctx.Done():
+	}
+
+	stop()
+
+	sugar.Infow("Shutdown signal received")
+	healthHandler.SetShuttingDown()
+
+	time.Sleep(5 * time.Second)
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 20 * time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		sugar.Errorw("Graceful shutdown failed", "error", err)
+	}
+
+	sugar.Infow("Server stopped")
 }
 
 func setupLogger() *zap.SugaredLogger {
 	encoderCfg := zap.NewProductionEncoderConfig()
 	encoderCfg.TimeKey = "timestamp"
-	encoderCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+		encoderCfg.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+		zapcore.ISO8601TimeEncoder(t.UTC(), enc)
+	}
 	encoderCfg.EncodeLevel = zapcore.CapitalLevelEncoder
 
 	logLevel := os.Getenv("LOG_LEVEL")
@@ -107,7 +145,7 @@ func setupLogger() *zap.SugaredLogger {
 		ErrorOutputPaths: []string{"stderr"},
 	}.Build()
 
-	logger = logger.WithOptions(zap.WithCaller(false), zap.AddStacktrace(zapcore.FatalLevel))
+	logger = logger.WithOptions(zap.WithCaller(true), zap.AddStacktrace(zapcore.FatalLevel))
 	sugar := logger.Sugar()
 	return sugar
 }
