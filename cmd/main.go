@@ -36,8 +36,8 @@ func main() {
 
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
-		port = "8082"
-		sugar.Warnw("SERVER_PORT not set, defaulting to 8082")
+		port = "8080"
+		sugar.Warnw("SERVER_PORT not set, defaulting to 8080")
 	}
 
 	mongoCfg := db.MongoConfig{

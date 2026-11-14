@@ -13,6 +13,7 @@ const (
     ErrForbidden           ErrorCode = "FORBIDDEN"
 	ErrNotFound            ErrorCode = "NOT_FOUND"
 	ErrRecipeAlreadyExists ErrorCode = "RECIPE_ALREADY_EXISTS"
+	ErrRecipeNotFound       ErrorCode = "RECIPE_NOT_FOUND"
 
     // Validation
 	ErrValidation ErrorCode = "VALIDATION_ERROR"

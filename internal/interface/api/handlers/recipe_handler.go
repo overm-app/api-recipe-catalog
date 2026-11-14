@@ -33,8 +33,7 @@ func (h *RecipeHandler) Create(c *gin.Context) {
 	}
 
 	var req models.CreateRecipeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.HandleError(c, appErrors.Validation(appErrors.ErrValidation, err.Error()))
+	if !response.BindJSON(c, &req) {
 		return
 	}
 
@@ -51,6 +50,11 @@ func (h *RecipeHandler) GetByID(c *gin.Context) {
 	userID := c.GetString("user_id")
 	recipeID := c.Param("id")
 
+	if userID == "" {
+		response.HandleError(c, appErrors.Unauthorized(appErrors.ErrUnauthorized, "User ID missing in context"))
+		return
+	}
+
 	resp, err := h.recipeUseCase.GetByID(c.Request.Context(), userID, recipeID)
 	if err != nil {
 		response.HandleError(c, err)
@@ -61,6 +65,10 @@ func (h *RecipeHandler) GetByID(c *gin.Context) {
 
 func (h *RecipeHandler) List(c *gin.Context) {
 	userID := c.GetString("user_id")
+	if userID == "" {
+		response.HandleError(c, appErrors.Unauthorized(appErrors.ErrUnauthorized, "User ID missing in context"))
+		return
+	}
 
 	page, pageSize := response.GetPaginationParams(c)
 
@@ -76,9 +84,13 @@ func (h *RecipeHandler) Update(c *gin.Context) {
 	userID := c.GetString("user_id")
 	recipeID := c.Param("id")
 
+	if userID == "" {
+		response.HandleError(c, appErrors.Unauthorized(appErrors.ErrUnauthorized, "User ID missing in context"))
+		return
+	}
+
 	var req models.UpdateRecipeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.HandleError(c, appErrors.Validation(appErrors.ErrValidation, err.Error()))
+	if !response.BindJSON(c, &req) {
 		return
 	}
 
@@ -93,6 +105,11 @@ func (h *RecipeHandler) Update(c *gin.Context) {
 func (h *RecipeHandler) Archive(c *gin.Context) {
 	userID := c.GetString("user_id")
 	recipeID := c.Param("id")
+
+	if userID == "" {
+		response.HandleError(c, appErrors.Unauthorized(appErrors.ErrUnauthorized, "User ID missing in context"))
+		return
+	}
 
 	if err := h.recipeUseCase.Archive(c.Request.Context(), userID, recipeID); err != nil {
 		response.HandleError(c, err)

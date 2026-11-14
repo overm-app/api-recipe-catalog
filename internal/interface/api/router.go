@@ -61,11 +61,6 @@ func (r *Router) setupRoutes(ginEngine *gin.Engine) {
 	recipes := ginEngine.Group("/recipe-catalog/v1")
 	recipes.Use(jwtMiddleware.JWTAuthMiddleware(r.jwtService, r.sugar))
 	{
-		recipes.GET("/ping", func(c *gin.Context) {
-			c.JSON(200, gin.H{
-				"message": "pong",
-			})
-		})
 		recipes.POST("/recipes", r.recipeHandler.Create)
 		recipes.GET("/recipes", r.recipeHandler.List)
 		recipes.GET("/recipes/:id", r.recipeHandler.GetByID)
