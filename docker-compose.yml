@@ -51,19 +51,20 @@ services:
       mongo-recipe-catalog:
         condition: service_healthy
     env_file:
-      - .env_compose
-    environment:
-      ENV: "develop"
+      - .env
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/health/readyz"]
       interval: 5s
       timeout: 5s
       retries: 3
     networks:
-      - overm-network
+      overm-network:
+        aliases: [recipe-catalog-svc]
     ports:
       - "${API_RECIPE_CATALOG_HOST:-8082}:8080"
     restart: unless-stopped
+    volumes:
+      - ./config/config.yaml:/etc/config/config.yaml:ro
 
 volumes:
   mongo-recipe-catalog-data:

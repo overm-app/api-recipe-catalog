@@ -1,0 +1,10 @@
+env: develop
+server:
+  port: 8080
+log:
+  level: info
+database:
+  db_name: overm_menus
+  pool:
+    max: 25 
+    min: 5
