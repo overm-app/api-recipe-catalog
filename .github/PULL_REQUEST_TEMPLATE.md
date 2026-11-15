@@ -28,7 +28,7 @@ Closes #
 
 ## Database
 - [ ] No migration required
-- [ ] Migration added in `migrations/`
+- [ ] Migration added in `scritpts/ | migrations`
 - [ ] Migration is backward compatible
 - [ ] Down migration written and tested locally
 
