@@ -9,7 +9,7 @@ import (
 	"github.com/overm-app/api-recipe-catalog/internal/interface/api/response"
 )
 
-type JWTMiddleware struct {}
+type JWTMiddleware struct{}
 
 func NewJWTMiddleware() *JWTMiddleware {
 	return &JWTMiddleware{}

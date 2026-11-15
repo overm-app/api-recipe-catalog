@@ -16,17 +16,19 @@ import (
 )
 
 type Router struct {
-    recipeHandler *handlers.RecipeHandler
-    jwtService    ports.JWTService
-    sugar         *zap.SugaredLogger
+	recipeHandler *handlers.RecipeHandler
+	healthHandler *handlers.HealthHandler
+	jwtService    ports.JWTService
+	sugar         *zap.SugaredLogger
 }
 
-func NewRouter(recipeHandler *handlers.RecipeHandler, jwtService ports.JWTService, sugar *zap.SugaredLogger) *Router {
-    return &Router{
-        recipeHandler: recipeHandler,
-        jwtService:    jwtService,
-        sugar:         sugar,
-    }
+func NewRouter(recipeHandler *handlers.RecipeHandler, healthHandler *handlers.HealthHandler, jwtService ports.JWTService, sugar *zap.SugaredLogger) *Router {
+	return &Router{
+		recipeHandler: recipeHandler,
+		healthHandler: healthHandler,
+		jwtService:    jwtService,
+		sugar:         sugar,
+	}
 }
 
 func (r *Router) SetupRouter(logger *zap.SugaredLogger) *gin.Engine {
@@ -51,23 +53,14 @@ func (r *Router) SetupRouter(logger *zap.SugaredLogger) *gin.Engine {
 }
 
 func (r *Router) setupRoutes(ginEngine *gin.Engine) {
-	ginEngine.GET("/healthz", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "ok",
-			"service": "api-recipe-catalog",
-		})
-	})
+	ginEngine.GET("/health/livez", r.healthHandler.Live)
+	ginEngine.GET("/health/readyz", r.healthHandler.Ready)
 
 	jwtMiddleware := middleware.NewJWTMiddleware()
 
 	recipes := ginEngine.Group("/recipe-catalog/v1")
 	recipes.Use(jwtMiddleware.JWTAuthMiddleware(r.jwtService, r.sugar))
 	{
-		recipes.GET("/ping", func(c *gin.Context) {
-			c.JSON(200, gin.H{
-				"message": "pong",
-			})
-		})
 		recipes.POST("/recipes", r.recipeHandler.Create)
 		recipes.GET("/recipes", r.recipeHandler.List)
 		recipes.GET("/recipes/:id", r.recipeHandler.GetByID)

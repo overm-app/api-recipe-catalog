@@ -3,24 +3,25 @@ package errors
 type ErrorCode string
 
 const (
-    // Auth
+	// Auth
 	ErrUnauthorized ErrorCode = "UNAUTHORIZED"
 	ErrTokenExpired ErrorCode = "TOKEN_EXPIRED"
 	ErrTokenInvalid ErrorCode = "TOKEN_INVALID"
 
-    // Resource
-    ErrBadRequest          ErrorCode = "BAD_REQUEST"
-    ErrForbidden           ErrorCode = "FORBIDDEN"
+	// Resource
+	ErrBadRequest          ErrorCode = "BAD_REQUEST"
+	ErrForbidden           ErrorCode = "FORBIDDEN"
 	ErrNotFound            ErrorCode = "NOT_FOUND"
 	ErrRecipeAlreadyExists ErrorCode = "RECIPE_ALREADY_EXISTS"
+	ErrRecipeNotFound      ErrorCode = "RECIPE_NOT_FOUND"
 
-    // Validation
+	// Validation
 	ErrValidation ErrorCode = "VALIDATION_ERROR"
 
-    // Conflict
-    ErrConflict ErrorCode = "CONFLICT"
+	// Conflict
+	ErrConflict ErrorCode = "CONFLICT"
 
-    // Internal
+	// Internal
 	ErrInternal    ErrorCode = "INTERNAL_ERROR"
 	ErrUnavailable ErrorCode = "SERVICE_UNAVAILABLE"
 )

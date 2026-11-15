@@ -1,0 +1,11 @@
+env: develop
+server:
+  name: api-recipe-catalog
+  port: 8080
+log:
+  level: info
+database:
+  db_name: overm_recipes
+  pool:
+    max: 25 
+    min: 5

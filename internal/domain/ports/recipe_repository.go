@@ -12,5 +12,4 @@ type RecipeRepository interface {
 	GetByUserID(ctx context.Context, userID string, page int, pageSize int) ([]models.Recipe, int, error)
 	Update(ctx context.Context, recipe *models.Recipe) (*models.Recipe, error)
 	Archive(ctx context.Context, userID string, recipeID string) error
-	FindByTitle(ctx context.Context, userID string, title string) (*models.Recipe, error)
 }

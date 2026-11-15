@@ -1,39 +1,73 @@
 services:
-  mongo:
+  mongo-recipe-catalog:
     image: mongo:8
     restart: unless-stopped
-    container_name: mongoDB
+    container_name: mongo-recipe-catalog-dev
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    entrypoint:
+      - bash
+      - -c
+      - |
+        cp /tmp/mongo-keyfile /data/keyfile
+        chown mongodb:mongodb /data/keyfile
+        chmod 400 /data/keyfile
+        exec docker-entrypoint.sh mongod --replSet rs0 --keyFile /data/keyfile --bind_ip_all
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DB_NAME}
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD}
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          mongosh --quiet -u "$$MONGO_INITDB_ROOT_USERNAME" -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --eval '
+            try { quit(rs.status().myState === 1 ? 0 : 1) }
+            catch (e) {
+              rs.initiate({_id: "rs0", members: [{_id: 0, host: "mongo-recipe-catalog:27017"}]});
+              quit(1)
+            }'
+      interval: 5s
+      timeout: 10s
+      retries: 12
+      start_period: 15s
     ports:
-      - "${MONGO_PORT}:27017"
+      - "127.0.0.1:${MONGO_PORT}:27017"
     volumes:
-      - mongo-data:/data/db
-      - ./scripts/schemaScript.js:/docker-entrypoint-initdb.d/schemaScript.js:ro
+      - mongo-recipe-catalog-data:/data/db
+      - ./mongo-keyfile:/tmp/mongo-keyfile:ro
+      - ./scripts:/docker-entrypoint-initdb.d:ro
     networks:
       - overm-network
 
   api-recipe-catalog:
+    image: api-recipe-catalog:dev
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: api-recipe-catalog
+    container_name: api-recipe-catalog-dev
     depends_on:
-      - mongo
+      mongo-recipe-catalog:
+        condition: service_healthy
     env_file:
-      - .env_compose
-    environment:
-      ENV: "develop"
+      - .env
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health/readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
     networks:
-      - overm-network
+      overm-network:
+        aliases: [recipe-catalog-svc]
     ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
+      - "${API_RECIPE_CATALOG_HOST:-8082}:8080"
     restart: unless-stopped
+    volumes:
+      - ./config/config.yaml:/etc/config/config.yaml:ro
 
 volumes:
-  mongo-data:
+  mongo-recipe-catalog-data:
 
 networks:
   overm-network:
