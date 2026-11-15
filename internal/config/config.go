@@ -12,7 +12,8 @@ import (
 type Config struct {
 	Env    string `yaml:"env"`
 	Server struct {
-		Port     string    `yaml:"port"`
+		Name string `yaml:"name"`
+		Port string `yaml:"port"`
 	} `yaml:"server"`
 	Log struct {
 		Level string `yaml:"level"`

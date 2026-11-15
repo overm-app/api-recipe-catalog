@@ -42,13 +42,15 @@ func main() {
 		os.Exit(1)
 	}
 	level.SetLevel(lvl)
+
+	sugar = sugar.With("service", cfg.Server.Name)
 	sugar = sugar.With("env", cfg.Env)
 
 	port := cfg.Server.Port
 
 	mongoCfg := db.MongoConfig{
-		URI:    cfg.MongoURI,
-		DBName: cfg.Database.DBName,
+		URI:         cfg.MongoURI,
+		DBName:      cfg.Database.DBName,
 		MaxPoolSize: cfg.Database.Pool.Max,
 		MinPoolSize: cfg.Database.Pool.Min,
 	}
@@ -84,8 +86,8 @@ func main() {
 	engine := r.SetupRouter(sugar)
 
 	srv := &http.Server{
-		Addr: ":" + port,
-		Handler: engine,
+		Addr:              ":" + port,
+		Handler:           engine,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
@@ -114,7 +116,7 @@ func main() {
 
 	time.Sleep(5 * time.Second)
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 20 * time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
@@ -144,5 +146,5 @@ func newLogger() (*zap.SugaredLogger, zap.AtomicLevel) {
 	if err != nil {
 		panic(err)
 	}
-	return logger.With(zap.String("service", "api-menu-shuffle")).Sugar(), level
+	return logger.Sugar(), level
 }

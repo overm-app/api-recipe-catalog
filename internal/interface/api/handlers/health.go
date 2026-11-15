@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap"
 
 	appErrors "github.com/overm-app/api-recipe-catalog/internal/domain/errors"
-	"github.com/overm-app/api-recipe-catalog/internal/interface/api/response"
 	"github.com/overm-app/api-recipe-catalog/internal/infrastructure/db"
+	"github.com/overm-app/api-recipe-catalog/internal/interface/api/response"
 )
 
 type HealthHandler struct {

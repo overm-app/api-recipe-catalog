@@ -18,8 +18,8 @@ func BindJSON(c *gin.Context, dst any) bool {
 			for _, fe := range ve {
 				details[strings.ToLower(fe.Field())] = fe.Tag()
 			}
-		HandleError(c, appErrors.Validation(appErrors.ErrValidation, "Request body is invalid").WithDetails(details))
-		return false
+			HandleError(c, appErrors.Validation(appErrors.ErrValidation, "Request body is invalid").WithDetails(details))
+			return false
 		}
 		HandleError(c, appErrors.Validation(appErrors.ErrBadRequest, "Malformed request body"))
 		return false

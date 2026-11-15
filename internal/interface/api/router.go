@@ -16,19 +16,19 @@ import (
 )
 
 type Router struct {
-    recipeHandler *handlers.RecipeHandler
+	recipeHandler *handlers.RecipeHandler
 	healthHandler *handlers.HealthHandler
-    jwtService    ports.JWTService
-    sugar         *zap.SugaredLogger
+	jwtService    ports.JWTService
+	sugar         *zap.SugaredLogger
 }
 
 func NewRouter(recipeHandler *handlers.RecipeHandler, healthHandler *handlers.HealthHandler, jwtService ports.JWTService, sugar *zap.SugaredLogger) *Router {
-    return &Router{
-        recipeHandler: recipeHandler,
-        healthHandler: healthHandler,
-        jwtService:    jwtService,
-        sugar:         sugar,
-    }
+	return &Router{
+		recipeHandler: recipeHandler,
+		healthHandler: healthHandler,
+		jwtService:    jwtService,
+		sugar:         sugar,
+	}
 }
 
 func (r *Router) SetupRouter(logger *zap.SugaredLogger) *gin.Engine {
